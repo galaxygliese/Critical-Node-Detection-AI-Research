@@ -1,5 +1,6 @@
 import networkx as nx
 from itertools import combinations
+from tqdm import tqdm
 
 def calc_critical_node_detection(G, k):
     """
@@ -33,13 +34,17 @@ def calc_critical_node_detection(G, k):
     max_disruption = 0
     
     # Iterate over all combinations of k nodes
-    for nodes in combinations(G.nodes(), k): # nodes: Tuple[int]
-        disruption = calculate_graph_disruption(G, nodes)
-        
-        # Update the best set of critical nodes if the current disruption is greater
-        if disruption > max_disruption:
-            best_critical_nodes = nodes
-            max_disruption = disruption
+    calculate_size = len([1 for i in combinations(G.nodes(), k)])
+
+    with tqdm(total=calculate_size) as pbar:
+        for nodes in combinations(G.nodes(), k): # nodes: Tuple[int]
+            disruption = calculate_graph_disruption(G, nodes)
+            
+            # Update the best set of critical nodes if the current disruption is greater
+            if disruption > max_disruption:
+                best_critical_nodes = nodes
+                max_disruption = disruption
+            pbar.update(1)
     
     return list(best_critical_nodes)
 
