@@ -2,9 +2,13 @@
 
 from scipy.spatial import distance
 from torch_geometric.data import Data, InMemoryDataset
+from typing import Any, List
+import networkx as nx 
 import pandas as pd
 import numpy as np
 import torch
+import csv
+import os
 
 def train_val_test_split(
         data:Data, 
@@ -65,8 +69,65 @@ class JapanCitiesDataset(InMemoryDataset):
         return ys
     
 
+class TerroristNetworkDataset(InMemoryDataset):
+    def __init__(self, 
+                 folder_path:str, 
+                 embeddings:Any = None, # [WIP]
+                 labels: Any = None, # [WIP]
+                 transform = None
+        ):
+        super().__init__('.', transform)
+        self.folder_path = folder_path
+        self.G = self.load_graph()
+
+        if embeddings is None:
+            self.embeddings = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+        else:
+            self.embeddings = embeddings
+
+        if labels is None:
+            self.ys = torch.zeros(len(self.G.nodes))
+        else:
+            self.ys = labels
+        self.edges = []
+        self.edge_attr = []
+
+        data = Data(
+            x=self.embeddings, # (N_node, D)
+            edge_index=self.edges, # (N_edge, 2)
+            y=self.ys, # (N_node, )
+            edge_attr=self.edge_attr # (N_edge, D_edge)
+        )
+        self.data, self.slices = self.collate([data])
+        print("Dataset Loaded!")
+
+    def load_graph(self) -> nx.Graph:
+        nodes_file = os.path.join(self.folder_path, 'nodes.csv')
+        edge_file = os.path.join(self.folder_path, 'edges.csv')
+
+        node_ids = []
+        G = nx.Graph()
+        with open(nodes_file) as file:
+            reader = csv.reader(file)
+            for i,row in enumerate(reader):
+                if i > 0:
+                    node_ids.append(int(row[0]))
+        G.add_nodes_from(node_ids)
+
+        edges = []
+        with open(edge_file) as file:
+            reader = csv.reader(file)
+            for i,row in enumerate(reader):
+                if i > 0:
+                    edge = row
+                    edges.append((int(edge[0]), int(edge[1])))
+        G.add_edges_from(edges)
+        return G
+
+
 if __name__ == '__main__':
-    dataset = JapanCitiesDataset(df_path="dataset/japan_cities/japan_cities.csv")
+    # dataset = JapanCitiesDataset(df_path="dataset/japan_cities/japan_cities.csv")
+    dataset = TerroristNetworkDataset(folder_path="dataset/9-11_terrorists")
     data = dataset[0]
     print("Length>", len(dataset))
     x = data.x 
@@ -74,3 +135,4 @@ if __name__ == '__main__':
 
     print("X >>", x.shape)
     print("Y >>", y.shape)
+    print(x[0])
