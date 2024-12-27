@@ -47,7 +47,23 @@ class SampleGraphGenerator(object):
         nx.draw_networkx(G)
         plt.show()
         
-    def save_graph(elf, G:nx.Graph):
+    def save_graph(self, G:nx.Graph):
         plt.cla()
         nx.draw_networkx(G)
-        plt.savefig("sample_graph.jpg")
+        plt.savefig("results/input_sample_graph.jpg")
+
+    def save_critical_node_graph(self, G:nx.Graph, critical_nodes:List[int]):
+        color_map = []
+        for node_id in G.nodes:
+            if node_id in critical_nodes:
+                color_map.append("red")
+            else:
+                color_map.append("blue")
+        plt.cla()
+        nx.draw(
+            G, 
+            node_color=color_map,
+            with_labels=True,
+            node_size=[v * 10 for v in dict(G.degree).values()]
+        )
+        plt.savefig("results/output_critical_nodes.jpg")

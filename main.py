@@ -5,8 +5,9 @@ from methods.heuristic_cnd import heuristic_cricital_node2, heuristic_critical_n
 from methods.copilot import calc_critical_node_detection
 
 def main():
-    graph_type = "barbell_graph"
-    # graph_type = "full_rary_tree"
+    K = 4
+    # graph_type = "barbell_graph"
+    graph_type = "full_rary_tree"
     # graph_type = "star_graph"
     # graph_type = "lollipop_graph"
     node_num:int = 10
@@ -18,10 +19,13 @@ def main():
     # sampler.plot_graph(G)
 
     # cricital_nodes = heuristic_cricital_node2(G, k=3)
-    critical_nodes = calc_critical_node_detection(G, k=3)
+    critical_nodes = calc_critical_node_detection(G, k=K)
     # critical_nodes = heuristic_critical_node_detection_gemini_mis(G, num_iterations=100, top_n=3)
     print("Critical Nodes:")
     print(critical_nodes)
+
+    sampler.save_critical_node_graph(G, critical_nodes)
+    print("Done!")
 
 if __name__ == '__main__':
     main()
