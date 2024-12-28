@@ -2,6 +2,7 @@
 
 from scipy.spatial import distance
 from torch_geometric.data import Data, InMemoryDataset
+from torch_geometric.utils.convert import from_networkx
 from typing import Any, List
 import networkx as nx 
 import pandas as pd
@@ -76,7 +77,7 @@ class TerroristNetworkDataset(InMemoryDataset):
                  labels: Any = None, # [WIP]
                  transform = None
         ):
-        super().__init__('.', transform)
+        super().__init__()
         self.folder_path = folder_path
         self.G = self.load_graph()
 
@@ -86,19 +87,16 @@ class TerroristNetworkDataset(InMemoryDataset):
             self.embeddings = embeddings
 
         if labels is None:
-            self.ys = torch.zeros(len(self.G.nodes))
+            self.ys = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
         else:
             self.ys = labels
-        self.edges = []
-        self.edge_attr = []
-
-        data = Data(
-            x=self.embeddings, # (N_node, D)
-            edge_index=self.edges, # (N_edge, 2)
-            y=self.ys, # (N_node, )
-            edge_attr=self.edge_attr # (N_edge, D_edge)
-        )
+        
+        self.G = self.update_graph()
+        data : Data = from_networkx(self.G)
         self.data, self.slices = self.collate([data])
+
+        if transform is not None:
+            self.data = transform(self.data)
         print("Dataset Loaded!")
 
     def load_graph(self) -> nx.Graph:
@@ -123,11 +121,57 @@ class TerroristNetworkDataset(InMemoryDataset):
                     edges.append((int(edge[0]), int(edge[1])))
         G.add_edges_from(edges)
         return G
+    
+    def update_graph(self) -> nx.Graph:
+        G = nx.Graph()
+        G.add_nodes_from([
+            (node_id, {'y': self.ys[node_id].tolist(), 'x':self.embeddings[node_id].tolist()})
+            for node_id in self.G.nodes]
+        )
+        
+        G.add_edges_from(self.G.edges)
+        return G
 
+class FullRaryTreeDataset(InMemoryDataset):
+    def __init__(self, 
+            node_num:int = 62,
+            branching_factor:int = 8,
+            transform = None
+        ):
+        super().__init__()
+        self.node_num = node_num
+        self.G = self.load_graph(branching_factor=branching_factor)
+        self.embeddings = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+        self.ys = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+
+        self.G = self.update_graph()
+        data : Data = from_networkx(self.G)
+        self.data, self.slices = self.collate([data])
+        if transform is not None:
+            self.data = transform(self.data)
+        print("Dataset Loaded!")
+
+
+    def load_graph(self, branching_factor:int = 8) -> nx.Graph:
+        G = nx.full_rary_tree(branching_factor, self.node_num, create_using=None)
+        return G
+    
+    def update_graph(self) -> nx.Graph:
+        G = nx.Graph()
+        G.add_nodes_from([
+            (node_id, {'y': self.ys[node_id].tolist(), 'x':self.embeddings[node_id].tolist()})
+            for node_id in self.G.nodes]
+        )
+        
+        G.add_edges_from(self.G.edges)
+        return G
 
 if __name__ == '__main__':
+    from torch_geometric.utils import to_networkx
+    import matplotlib.pyplot as plt
     # dataset = JapanCitiesDataset(df_path="dataset/japan_cities/japan_cities.csv")
     dataset = TerroristNetworkDataset(folder_path="dataset/9-11_terrorists")
+    # dataset = FullRaryTreeDataset()
     data = dataset[0]
     print("Length>", len(dataset))
     x = data.x 
@@ -135,4 +179,10 @@ if __name__ == '__main__':
 
     print("X >>", x.shape)
     print("Y >>", y.shape)
+    print("Edges >>", data.edge_index)
     print(x[0])
+    print("Slices >>", dataset.slices)
+
+    G = to_networkx(data, to_undirected=True)
+    nx.draw(G)
+    plt.savefig("results/plot_from_dataset.jpg")
