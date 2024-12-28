@@ -166,6 +166,77 @@ class FullRaryTreeDataset(InMemoryDataset):
         G.add_edges_from(self.G.edges)
         return G
 
+class ErdosRenyiDataset(InMemoryDataset):
+    def __init__(self, 
+            node_num:int = 62,
+            p:int = 0.1,
+            seed:int = 42,
+            transform = None
+        ):
+        super().__init__()
+        self.node_num = node_num
+        self.G = self.load_graph(p=p, seed=seed)
+        self.embeddings = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+        self.ys = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+
+        self.G = self.update_graph()
+        data : Data = from_networkx(self.G)
+        self.data, self.slices = self.collate([data])
+        if transform is not None:
+            self.data = transform(self.data)
+        print("Dataset Loaded!")
+
+
+    def load_graph(self, p:float, seed:int) -> nx.Graph:
+        G = nx.erdos_renyi_graph(n=self.node_num, p=p, seed=seed)
+        return G
+    
+    def update_graph(self) -> nx.Graph:
+        G = nx.Graph()
+        G.add_nodes_from([
+            (node_id, {'y': self.ys[node_id].tolist(), 'x':self.embeddings[node_id].tolist()})
+            for node_id in self.G.nodes]
+        )
+        
+        G.add_edges_from(self.G.edges)
+        return G
+
+class WattsStrogatzDataset(InMemoryDataset):
+    def __init__(self, 
+            node_num:int = 62,
+            mean_degree:int = 62,
+            beta:int = 0.1,
+            seed:int = 42,
+            transform = None
+        ):
+        super().__init__()
+        self.node_num = node_num
+        self.G = self.load_graph(mean_degree=mean_degree, beta=beta, seed=seed)
+        self.embeddings = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+        self.ys = torch.nn.functional.one_hot(torch.arange(0, len(self.G.nodes)), num_classes=len(self.G.nodes))
+
+        self.G = self.update_graph()
+        data : Data = from_networkx(self.G)
+        self.data, self.slices = self.collate([data])
+        if transform is not None:
+            self.data = transform(self.data)
+        print("Dataset Loaded!")
+
+
+    def load_graph(self, mean_degree:int, beta:float, seed:int) -> nx.Graph:
+        G = nx.watts_strogatz_graph(n=self.node_num, k=mean_degree, p=beta, seed=seed)
+        return G
+    
+    def update_graph(self) -> nx.Graph:
+        G = nx.Graph()
+        G.add_nodes_from([
+            (node_id, {'y': self.ys[node_id].tolist(), 'x':self.embeddings[node_id].tolist()})
+            for node_id in self.G.nodes]
+        )
+        
+        G.add_edges_from(self.G.edges)
+        return G
+
 if __name__ == '__main__':
     from torch_geometric.utils import to_networkx
     import matplotlib.pyplot as plt
