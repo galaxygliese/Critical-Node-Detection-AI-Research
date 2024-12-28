@@ -82,7 +82,7 @@ def main():
     print(critical_nodes)
     print("Time (sec): ", end_time - start_time)
 
-    sampler.save_critical_node_graph(G, critical_nodes)
+    save_critical_node_graph(G, critical_nodes)
     print("Done!")
 
 if __name__ == '__main__':
