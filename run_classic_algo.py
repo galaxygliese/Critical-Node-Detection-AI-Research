@@ -4,14 +4,44 @@ from datas.sample_generator import SampleGraphGenerator
 from datas.sample_from_csv import SampleGraphFromCSV
 from methods.heuristic_cnd import heuristic_cricital_node2, heuristic_critical_node_detection_gemini_mis
 from methods.copilot import calc_critical_node_detection
+from typing import List
+import matplotlib.pyplot as plt 
+import networkx as nx
+import numpy as np
+import random 
 import time 
+import sys 
+import os
 
-# MODE = 'EXAMPLE' 
-MODE = 'CSV' 
+dataset_type = sys.argv[1]
+seed = 42
+
+def seed_everything(seed=42):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    print("Seeds set.")
+seed_everything(seed)
+
+def save_critical_node_graph(G:nx.Graph, critical_nodes:List[int]):
+        color_map = []
+        for node_id in G.nodes:
+            if node_id in critical_nodes:
+                color_map.append("red")
+            else:
+                color_map.append("blue")
+        plt.cla()
+        nx.draw(
+            G, 
+            node_color=color_map,
+            with_labels=True,
+            node_size=[v * 10 for v in dict(G.degree).values()]
+        )
+        plt.savefig("results/output_critical_nodes_csv.jpg")
 
 def main():
     K = 4
-    if MODE == 'EXAMPLE':
+    if dataset_type == 'tree':
         # graph_type = "barbell_graph"
         graph_type = "full_rary_tree"
         # graph_type = "star_graph"
@@ -25,10 +55,21 @@ def main():
         sampler.save_graph(G)
         # sampler.plot_graph(G)
 
-    elif MODE == 'CSV':
+    elif dataset_type == 'terrorist':
         sampler = SampleGraphFromCSV("dataset/9-11_terrorists")
         sampler.save_graph()
         G = sampler.G
+
+    elif dataset_type == 'erdos_renyi':
+        node_num:int = 62 
+        p:float = 0.1
+        G = nx.erdos_renyi_graph(n=node_num, p=p, seed=seed)
+
+    elif dataset_type == 'watts_strogatz':
+        node_num:int = 62 
+        k:int = 5 # mean_degree
+        beta:float = 0.1
+        G = nx.watts_strogatz_graph(n=node_num, k=k, p=beta, seed=seed)
 
     print("Calculation Started!")
     print("Node number:", len(G.nodes))
