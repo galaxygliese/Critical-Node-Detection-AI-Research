@@ -37,7 +37,7 @@ def save_critical_node_graph(G:nx.Graph, critical_nodes:List[int]):
             with_labels=True,
             node_size=[v * 10 for v in dict(G.degree).values()]
         )
-        plt.savefig("results/output_critical_nodes_csv.jpg")
+        plt.savefig(f"results/output_critical_nodes_{dataset_type}.jpg")
 
 def main():
     K = 4
