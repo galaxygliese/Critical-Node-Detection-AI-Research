@@ -4,6 +4,8 @@ from datas.sample_generator import SampleGraphGenerator
 from datas.sample_from_csv import SampleGraphFromCSV
 from methods.heuristic_cnd import heuristic_cricital_node2, heuristic_critical_node_detection_gemini_mis
 from methods.copilot import calc_critical_node_detection
+from methods.vertex_partition import vertex_partition
+from methods.cnp1 import cnp1
 from typing import List
 import matplotlib.pyplot as plt 
 import networkx as nx
@@ -61,12 +63,12 @@ def main():
         G = sampler.G
 
     elif dataset_type == 'erdos_renyi':
-        node_num:int = 62 
-        p:float = 0.1
+        node_num:int = 30#62 
+        p:float = 0.3
         G = nx.erdos_renyi_graph(n=node_num, p=p, seed=seed)
 
     elif dataset_type == 'watts_strogatz':
-        node_num:int = 62 
+        node_num:int = 30#62 
         k:int = 5 # mean_degree
         beta:float = 0.1
         G = nx.watts_strogatz_graph(n=node_num, k=k, p=beta, seed=seed)
@@ -75,15 +77,24 @@ def main():
     print("Node number:", len(G.nodes))
     print("Edge number:", len(G.edges))
     start_time = time.time()
-    critical_nodes = calc_critical_node_detection(G, k=K)
+    # critical_nodes = calc_critical_node_detection(G, k=K)
+    critical_nodes = cnp1(G, K=K)
     end_time = time.time()
     # critical_nodes = heuristic_critical_node_detection_gemini_mis(G, num_iterations=100, top_n=3)
-    print("Critical Nodes:")
-    print(critical_nodes)
-    print("Time (sec): ", end_time - start_time)
+    # print("Critical Nodes:")
+    # print(critical_nodes)
+    print("CNP-1 Time (sec): ", end_time - start_time)
 
     save_critical_node_graph(G, critical_nodes)
     print("Done!")
+
+    start_time = time.time()
+    critical_nodes2 = vertex_partition(G, K=K)
+    end_time = time.time()
+    print("Vertex-Partion Time (sec): ", end_time - start_time)
+
+    print("Sol CNP-1:", critical_nodes)
+    print("Sol Vertex-Partion:", critical_nodes2)
 
 if __name__ == '__main__':
     main()
