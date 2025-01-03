@@ -42,7 +42,7 @@ def save_critical_node_graph(G:nx.Graph, critical_nodes:List[int]):
         plt.savefig(f"results/output_critical_nodes_{dataset_type}.jpg")
 
 def main():
-    K = 4
+    K = 7
     if dataset_type == 'tree':
         # graph_type = "barbell_graph"
         graph_type = "full_rary_tree"
@@ -93,8 +93,8 @@ def main():
     end_time = time.time()
     print("Vertex-Partion Time (sec): ", end_time - start_time)
 
-    print("Sol CNP-1:", critical_nodes)
-    print("Sol Vertex-Partion:", critical_nodes2)
+    print("Sol CNP-1:", sorted(critical_nodes))
+    print("Sol Vertex-Partion:", sorted(critical_nodes2))
 
 if __name__ == '__main__':
     main()

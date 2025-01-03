@@ -82,8 +82,8 @@ def cnp1(G:nx.Graph, K:int):
     duration = time.time() - start
 
     solution = solver.solution
-    print("Duration (sec):", duration)
-    print("Solution:", solution)
+    # print("Duration (sec):", duration)
+    # print("Solution:", solution)
     solved_nodes = []
     for node_id, flag in enumerate(solution.get_values(v)):
         if flag > 0:
