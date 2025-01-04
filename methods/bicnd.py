@@ -582,7 +582,12 @@ def bicnp(G:nx.Graph, K:int):
     print(mip.get_mip_relative_gap())
 
     print("SUM of X:", sum(x_values))
-    return x_values
+
+    solved_nodes = []
+    for node_id, flag in enumerate(x_values):
+        if int(flag) > 0:
+            solved_nodes.append(node_id)
+    return solved_nodes
 
 
 if __name__ == '__main__':

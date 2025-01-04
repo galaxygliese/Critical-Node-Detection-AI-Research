@@ -84,8 +84,9 @@ def main():
     end_time = time.time()
     # critical_nodes = heuristic_critical_node_detection_gemini_mis(G, num_iterations=100, top_n=3)
     # print("Critical Nodes:")
-    # print(critical_nodes)
-    print("CNP-1 Time (sec): ", end_time - start_time)
+    print(critical_nodes)
+    # print("CNP-1 Time (sec): ", end_time - start_time)
+    print("BiCNP Time (sec): ", end_time - start_time)
 
     save_critical_node_graph(G, critical_nodes)
     print("Done!")
@@ -95,7 +96,8 @@ def main():
     end_time = time.time()
     print("Vertex-Partion Time (sec): ", end_time - start_time)
 
-    print("Sol CNP-1:", sorted(critical_nodes))
+    # print("Sol CNP-1:", sorted(critical_nodes))
+    print("Sol BiCNP:", sorted(critical_nodes))
     print("Sol Vertex-Partion:", sorted(critical_nodes2))
 
 if __name__ == '__main__':
