@@ -5,6 +5,7 @@ from datas.sample_from_csv import SampleGraphFromCSV
 from methods.heuristic_cnd import heuristic_cricital_node2, heuristic_critical_node_detection_gemini_mis
 from methods.copilot import calc_critical_node_detection
 from methods.vertex_partition import vertex_partition
+from methods.bicnd import bicnp
 from methods.cnp1 import cnp1
 from typing import List
 import matplotlib.pyplot as plt 
@@ -42,7 +43,7 @@ def save_critical_node_graph(G:nx.Graph, critical_nodes:List[int]):
         plt.savefig(f"results/output_critical_nodes_{dataset_type}.jpg")
 
 def main():
-    K = 4
+    K = 7
     if dataset_type == 'tree':
         # graph_type = "barbell_graph"
         graph_type = "full_rary_tree"
@@ -78,12 +79,14 @@ def main():
     print("Edge number:", len(G.edges))
     start_time = time.time()
     # critical_nodes = calc_critical_node_detection(G, k=K)
-    critical_nodes = cnp1(G, K=K)
+    # critical_nodes = cnp1(G, K=K)
+    critical_nodes = bicnp(G, K=K)
     end_time = time.time()
     # critical_nodes = heuristic_critical_node_detection_gemini_mis(G, num_iterations=100, top_n=3)
     # print("Critical Nodes:")
-    # print(critical_nodes)
-    print("CNP-1 Time (sec): ", end_time - start_time)
+    print(critical_nodes)
+    # print("CNP-1 Time (sec): ", end_time - start_time)
+    print("BiCNP Time (sec): ", end_time - start_time)
 
     save_critical_node_graph(G, critical_nodes)
     print("Done!")
@@ -93,8 +96,9 @@ def main():
     end_time = time.time()
     print("Vertex-Partion Time (sec): ", end_time - start_time)
 
-    print("Sol CNP-1:", critical_nodes)
-    print("Sol Vertex-Partion:", critical_nodes2)
+    # print("Sol CNP-1:", sorted(critical_nodes))
+    print("Sol BiCNP:", sorted(critical_nodes))
+    print("Sol Vertex-Partion:", sorted(critical_nodes2))
 
 if __name__ == '__main__':
     main()
