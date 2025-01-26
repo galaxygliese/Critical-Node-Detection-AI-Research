@@ -10,6 +10,7 @@ def cnp1(G:nx.Graph, K:int):
     critical_node_num:int = K
 
     solver = cplex.Cplex()
+    solver.parameters.timelimit.set(150)
 
     # Define: target function
     v = list(solver.variables.add(
